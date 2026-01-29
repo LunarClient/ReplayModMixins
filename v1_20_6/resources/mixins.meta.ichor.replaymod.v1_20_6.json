@@ -1,0 +1,13 @@
+{
+    "minVersion": "0.8",
+    "package": "com.moonsworth.lunar.replaymod.v1_20_6.metamixin",
+    "target": "CLIENT",
+    "required": true,
+    "compatibilityLevel": "JAVA_17",
+    "mixins": [
+      "ReplayModNonMMLauncherMixin_v1_20"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+  }
+}

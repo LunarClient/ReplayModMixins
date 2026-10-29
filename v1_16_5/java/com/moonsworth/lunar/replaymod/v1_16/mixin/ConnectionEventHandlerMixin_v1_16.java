@@ -1,0 +1,74 @@
+package com.moonsworth.lunar.replaymod.v1_16.mixin;
+
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.moonsworth.lunar.client.util.Ref;
+import com.moonsworth.lunar.replaymod.v1_16.link.ReplayModGuiLink_Impl;
+import com.replaymod.core.SettingsRegistry;
+import com.replaymod.recording.ServerInfoExt;
+import com.replaymod.recording.Setting;
+import com.replaymod.recording.handler.ConnectionEventHandler;
+import net.minecraft.network.Connection;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(ConnectionEventHandler.class)
+public class ConnectionEventHandlerMixin_v1_16 {
+
+    // Auto start recording
+    @WrapOperation(
+            method = "onConnectedToServerEvent",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/replaymod/core/SettingsRegistry;get(Lcom/replaymod/core/SettingsRegistry$SettingKey;)Ljava/lang/Object;"
+            )
+    )
+    public Object ichor$get(SettingsRegistry instance, SettingsRegistry.SettingKey<?> key, Operation<Object> original) {
+        if (key == Setting.AUTO_START_RECORDING && !Ref.client().getMods().getReplayMod().isEnabled()) {
+            return false;
+        }
+        return original.call(instance, key);
+    }
+
+    @WrapOperation(
+            method = "onConnectedToServerEvent",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/replaymod/recording/ServerInfoExt;getAutoRecording()Ljava/lang/Boolean;"
+            )
+    )
+    public Boolean ichor$autoRecording(ServerInfoExt instance, Operation<Boolean> original) {
+        if (!Ref.client().getMods().getReplayMod().isEnabled()) {
+            return false;
+        }
+        return original.call(instance);
+    }
+
+    @WrapOperation(
+            method = "onConnectedToServerEvent",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/replaymod/core/ReplayMod;isMinimalMode()Z"
+            )
+    )
+    public boolean ichor$isMinimalMode(Operation<Boolean> original) {
+        if (!Ref.client().getMods().getReplayMod().isEnabled()) {
+            return false;
+        }
+        return original.call();
+    }
+
+    @Inject(
+            method = "onConnectedToServerEvent",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/replaymod/core/ReplayMod;printInfoToChat(Ljava/lang/String;[Ljava/lang/Object;)V"
+            )
+    )
+    public void ichor$autoRecord(Connection serverInfo, CallbackInfo ci) {
+        ReplayModGuiLink_Impl.setRecordedThisSession(true);
+    }
+
+}
